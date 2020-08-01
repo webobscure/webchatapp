@@ -17,8 +17,6 @@ export default class Join extends Component {
             room: '',
             selectedOption:null
         }
-        this.inputPressed = this.inputPressed.bind(this)
-        this.optionPressed = this.optionPressed.bind(this)
     }
     handleChange = (selectedOption) => {
         this.setState(
@@ -37,12 +35,7 @@ export default class Join extends Component {
     inputPressed = (event) => {
         this.setState({name : event.target.value})
     }
-    optionPressed = (event) => {
-        let room = this.state.room
-        this.setState({[room]: event.target.value})
-        console.log(event.target.value);
-        console.log(this.state.room);
-    }
+    
     render() {
         const { room, name,selectedOption } = this.state;
         return (
@@ -62,9 +55,7 @@ export default class Join extends Component {
                         <Link onClick={event => (!name || !room) ? event.preventDefault() : null} to={`/chat?name=${name}&room=${room}`}>
                             <button className="button mt-20" type="submit" value="Submit">Sign in room</button>
                         </Link>
-                        <Link onClick={event => (!name || !room) ? event.preventDefault() : null} to={`/chatweb?name=${name}&room=${room}`}>
-                            <button className="button mt-20" type="submit" value="Submit">Sign in Camera Room</button>
-                        </Link>
+                        
                     </div>
                 </div>
             </form>
