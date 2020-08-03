@@ -9,12 +9,11 @@ import TextContainer from '../TextContainer/TextContainer';
 import Messages from '../Messages/Messages';
 import InfoBar from '../InfoBar/InfoBar';
 import Input from '../Input/Input';
-import Videocall from '../VideoCall/VideoCall'
 
 import './Chat.css';
+import VideoCall from "../VideoCall/VideoCall";
 
 let socket;
-
 const Chat = ({ location }) => {
   const [name, setName] = useState('');
   const [room, setRoom] = useState('');
@@ -22,7 +21,7 @@ const Chat = ({ location }) => {
   const [time] = useState('');
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
-  const ENDPOINT = 'https://bizzzly-chat.herokuapp.com/';
+  const ENDPOINT = 'http://localhost:5000/';
      
     
   useEffect(() => {
@@ -66,7 +65,7 @@ const Chat = ({ location }) => {
           <Input message={message} setMessage={setMessage} sendMessage={sendMessage} />
       </div>
       <TextContainer users={users} />
-      <Videocall />
+      <VideoCall />
     </div>
   );
 }

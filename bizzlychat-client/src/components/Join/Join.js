@@ -46,16 +46,18 @@ export default class Join extends Component {
                         <div><input placeholder="Your name" className="joinInput" type="text" onChange={this.inputPressed} value={name}/></div>
                         <div>
                         <Select
-        value={selectedOption}
-        onChange={this.handleChange}
-        options={options}
-        className="mt-20"
-      />
+                          value={selectedOption}
+                          onChange={this.handleChange}
+                          options={options}
+                          className="mt-20"
+                        />
                         </div>
                         <Link onClick={event => (!name || !room) ? event.preventDefault() : null} to={`/chat?name=${name}&room=${room}`}>
                             <button className="button mt-20" type="submit" value="Submit">Sign in room</button>
                         </Link>
-                        
+                        <Link onClick={event => (!name || !room) ? event.preventDefault() : null} to={`/chatweb?name=${name}&room=${room}`}>
+                            <button className="button mt-20" type="submit" value="Submit">Sign in webroom</button>
+                        </Link>
                     </div>
                 </div>
             </form>
