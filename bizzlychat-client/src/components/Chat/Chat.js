@@ -11,7 +11,6 @@ import InfoBar from '../InfoBar/InfoBar';
 import Input from '../Input/Input';
 
 import './Chat.css';
-import VideoCall from "../VideoCall/VideoCall";
 
 let socket;
 const Chat = ({ location }) => {
@@ -21,13 +20,13 @@ const Chat = ({ location }) => {
   const [time] = useState('');
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
-  const ENDPOINT = 'http://localhost:5000/';
+  const ENDPOINT = 'https://gardi-systems.herokuapp.com/';
      
     
   useEffect(() => {
     const { name, room } = queryString.parse(location.search);
 
-    socket = io(ENDPOINT);
+    socket = io.connect(ENDPOINT);
  
     setRoom(room);
     setName(name)
@@ -56,7 +55,8 @@ const Chat = ({ location }) => {
       socket.emit('sendMessage', message, () => setMessage('') );
     }
   }
-
+  
+  // <VideoCall users={users} />
   return (
     <div className="outerContainer">
       <div className="container">
@@ -65,7 +65,6 @@ const Chat = ({ location }) => {
           <Input message={message} setMessage={setMessage} sendMessage={sendMessage} />
       </div>
       <TextContainer users={users} />
-      <VideoCall />
     </div>
   );
 }

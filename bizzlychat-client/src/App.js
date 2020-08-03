@@ -12,7 +12,7 @@ const App = () => (
     <Router>
         <Route path="/"  exact component={Join}/>
         <Route path="/chat" render={(props) => <Chat {...props} />} />
-        <Route path="/chatweb" component={VideoCall} />
+        <Route path="/chatweb" render={(props) => <VideoCall {...props} />} />
 
         
     </Router>

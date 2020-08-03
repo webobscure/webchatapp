@@ -9,6 +9,7 @@
     padding: 5%;
     width: 80%;
     font-size: 1.2em;
+    margin-bottom: 15px;
   }
   
   input:focus, textarea:focus, select:focus{

@@ -42,7 +42,7 @@ export default class Join extends Component {
             <form onSubmit={this.handleSubmit}>
                 <div className="joinOuterContainer">
                     <div className="joinInnerContainer">
-                        <h1 className="head">Join</h1>
+                        <h1 className="head">Gardi-systems</h1>
                         <div><input placeholder="Your name" className="joinInput" type="text" onChange={this.inputPressed} value={name}/></div>
                         <div>
                         <Select

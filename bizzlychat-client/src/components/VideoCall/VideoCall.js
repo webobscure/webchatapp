@@ -1,132 +1,141 @@
 import React, { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 import Peer from 'simple-peer'
-import styled from 'styled-components'
-//import queryString from 'query-string';
+import queryString from 'query-string';
+import InfoBar from "../InfoBar/InfoBar";
 
-const Container = styled.div`
-    padding: 20px;
-    display: flex;
-    height: 100vh;
-    width: 90%;
-    margin: auto;
-    flex-wrap: wrap;
-`;
-
-const StyledVideo = styled.video`
-    height: 40%;
-    width: 50%;
-`;
-
-const Video = (props) => {
-    const ref = useRef();
-
-    useEffect(() => {
-        props.peer.on("stream", stream => {
-            ref.current.srcObject = stream;
-        })
-    }, []);
-
-    return (
-        <StyledVideo playsInline autoPlay ref={ref} />
-    );
-}
+import './VideoCall.css'
 
 
-
-
-
-
-
-
-//let socket
-const VideoCall = ({props}) => {
-    const [peers, setPeers] = useState([]);
-    const socketRef = useRef();
+const VideoCall = ({location}) => {
+    const [yourID, setYourID] = useState("");
+    const [name, setName] = useState('');
+    const [room, setRoom] = useState('');
+    const [stream, setStream] = useState();
+    const [receivingCall, setReceivingCall] = useState(false);
+    const [caller, setCaller] = useState("");
+    const [callerSignal, setCallerSignal] = useState();
+    const [callAccepted, setCallAccepted] = useState(false);
+    const [users, setUsers] = useState({});
     const userVideo = useRef();
-    const peersRef = useRef([]);
-    const roomID = window.location.search.room;
-    const ENDPOINT = 'bizzzly-chat.herokuapp.com/';
-       
+    const partnerVideo = useRef()
+    const socket = useRef()
+    const ENDPOINT = 'http://localhost:8080/'
     useEffect(() => {
-        //const { name, room } = queryString(location.search)
-
-        navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(stream => {
+        const { name, room } = queryString.parse(location.search)
+        setName(name)
+        setRoom(room)
+        socket.current = io.connect(ENDPOINT);
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+          setStream(stream);
+          if (userVideo.current) {
             userVideo.current.srcObject = stream;
-
-            socketRef.current = io.connect(ENDPOINT);
-            socketRef.current.emit("join", roomID);
-
-            socketRef.current.on("all users", users => {
-                const peers = [];
-                users.forEach(userID => {
-                    const peer = createPeer(userID, socketRef.current.id, stream);
-                    peersRef.current.push({
-                        peerID: userID,
-                        peer,
-                    })
-                    peers.push(peer);
-                })
-                setPeers(peers);
-            })
-
-            socketRef.current.on("user joined", payload => {
-                const peer = addPeer(payload.signal, payload.callerID, stream);
-                peersRef.current.push({
-                    peerID: payload.callerID,
-                    peer,
-                })
-
-                setPeers(users => [...users, peer]);
-            });
-
-            socketRef.current.on("receiving returned signal", payload => {
-                const item = peersRef.current.find(p => p.peerID === payload.id);
-                item.peer.signal(payload.signal);
-            });
+          }
         })
-    }, []);
-
-    function createPeer(userToSignal, callerID, stream) {
+    
+        socket.current.on("yourID", (id) => {
+          setYourID(id);
+        })
+       
+        socket.current.on("allUsers", (users) => {
+          setUsers(users);
+        })
+    
+        socket.current.on("hey", (data) => {
+          setReceivingCall(true);
+          setCaller(data.from);
+          setCallerSignal(data.signal);
+        })
+      }, [ENDPOINT,location.search]);
+    
+      function callPeer(id) {
         const peer = new Peer({
-            initiator: true,
-            trickle: false,
-            stream,
+          initiator: true,
+          trickle: false,
+          stream: stream,
         });
-
-        peer.on("signal", signal => {
-            socketRef.current.emit("sending signal", { userToSignal, callerID, signal })
+    
+        peer.on("signal", data => {
+          socket.current.emit("callUser", { userToCall: id, signalData: data, from: yourID })
         })
-
-        return peer;
-    }
-
-    function addPeer(incomingSignal, callerID, stream) {
+    
+        peer.on("stream", stream => {
+          if (partnerVideo.current) {
+            partnerVideo.current.srcObject = stream;
+          }
+        });
+    
+        socket.current.on("callAccepted", signal => {
+          setCallAccepted(true);
+          peer.signal(signal);
+        })
+    
+      }
+    
+      function acceptCall() {
+        setCallAccepted(true);
         const peer = new Peer({
-            initiator: false,
-            trickle: false,
-            stream,
+          initiator: false,
+          trickle: false,
+          stream: stream,
+        });
+        peer.on("signal", data => {
+          socket.current.emit("acceptCall", { signal: data, to: caller })
         })
-
-        peer.on("signal", signal => {
-            socketRef.current.emit("returning signal", { signal, callerID })
-        })
-
-        peer.signal(incomingSignal);
-
-        return peer;
-    }
-
-    return (
-        <Container>
-            <StyledVideo muted ref={userVideo} autoPlay playsInline />
-            {peers.map((peer, index) => {
-                return (
-                    <Video key={index} peer={peer} />
-                );
+    
+        peer.on("stream", stream => {
+          partnerVideo.current.srcObject = stream;
+        });
+    
+        peer.signal(callerSignal);
+      }
+    
+      let UserVideo;
+      if (stream) {
+        UserVideo = (
+          <video className="video-grid"  playsInline muted ref={userVideo} autoPlay />
+        );
+      }
+    
+      let PartnerVideo;
+      if (callAccepted) {
+        PartnerVideo = (
+          <video className="video-grid"  playsInline ref={partnerVideo} autoPlay />
+        );
+      }
+    
+      let incomingCall;
+      if (receivingCall) {
+        incomingCall = (
+          <div>
+            <h1>{caller} is calling you</h1>
+            <button className="incoming" onClick={acceptCall}>Accept</button>
+          </div>
+        )
+      }
+      return (
+        <div className="box">
+            <InfoBar room={room} />
+          <div className="row">
+            {UserVideo}
+            {PartnerVideo}
+          </div>
+          <div className="row">
+            {  
+            Object.keys(users).map(key => {
+              if (key === yourID) {
+                return null;
+              }
+              return (
+                <button key={key} className="incoming" onClick={() => callPeer(key)}>Call {key} : {name}</button>
+              );
             })}
-        </Container>
-    );
+          </div>
+          <div className="row">
+            {incomingCall}
+          </div>
+        </div>
+      );
 };
 
 export default VideoCall
